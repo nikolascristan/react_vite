@@ -2,7 +2,6 @@ import { useState,useEffect } from 'react'
 import axios from 'axios'
 
 
-//test note
 function areTheseObjectsEqual(first, second) {
   "use strict";
 
@@ -130,6 +129,12 @@ const App = () => {
       } else {
         window.alert(`Name or phone number already exist`)
       }
+
+    axios
+      .post('http://localhost:3001/persons', personObject)
+      .then(response => {
+        console.log(response)
+      })
   }
 
   const filteredPerson = persons.filter(persons => 
