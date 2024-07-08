@@ -1,5 +1,6 @@
 import { useState,useEffect } from 'react'
 import axios from 'axios'
+import personServices from './services/persons'
 
 
 function areTheseObjectsEqual(first, second) {
@@ -89,7 +90,8 @@ console.log(props)
   return(
     props.filteredperson.map((person) =>
       <li key={person.id}>
-        {person.name}, {person.number}
+        {person.name}, {person.number} {}
+        <button onClick={()=> props.handleDelete(person.id)}>delete</button>
       </li>
     )
   )
@@ -100,15 +102,15 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
-  const [nextID,setNextID] = useState(5)
+  const [nextID,setNextID] = useState(2)
 
   useEffect(()=> {
     console.log('effect')
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response =>{
+    personServices
+      .getAll()
+      .then(initialPersons =>{
         console.log('promise fulfilled')
-        setPersons(response.data)
+        setPersons(initialPersons)
       })
   },[])
 
@@ -123,18 +125,25 @@ const App = () => {
     const nameExists = persons.some(element => areTheseObjectsEqual(element.name, personObject.name))
     const numberExists = persons.some(element => areTheseObjectsEqual(element.number, personObject.number))
     if(!nameExists && !numberExists){
-      setPersons(persons.concat(personObject))
+      personServices
+      .create(personObject)
+        .then(returnedPerson =>{ 
+        setPersons(persons.concat(returnedPerson))
+        setNewFilter('')
+        setNewName('')
+        setNewNumber('')
+        })
       setNextID(nextID + 1)
       window.alert(`Entry added: ${personObject.name}, ${personObject.number}`)
       } else {
         window.alert(`Name or phone number already exist`)
       }
 
-    axios
+    /*axios
       .post('http://localhost:3001/persons', personObject)
       .then(response => {
         console.log(response)
-      })
+      })*/
   }
 
   const filteredPerson = persons.filter(persons => 
@@ -158,6 +167,17 @@ const App = () => {
     setNewFilter(event.target.value)
   }
 
+  const handleDelete = (id) => {
+    console.log('Deleting id ${id}')
+    /*if (window.confirm("Do you want to delete?")) {
+      window.open()
+    }*/
+    return(
+      personServices
+      .deleteEntry(id)
+    )
+  }
+
   return (
     <div>
       <h2>Phonebook</h2>
@@ -165,7 +185,7 @@ const App = () => {
       <h3>add a new</h3>
       <PersonForm addPerson={addPerson} newName={newName} handleNameChange={handleNameChange} newNumber={newNumber} handleNumberChange={handleNumberChange}/>
       <h3>Numbers</h3>
-      <Persons filteredperson={filteredPerson}/>
+      <Persons filteredperson={filteredPerson} handleDelete={handleDelete}/>
     </div>
   )
 }
