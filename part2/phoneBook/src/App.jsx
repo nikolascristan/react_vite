@@ -1,7 +1,8 @@
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 import personServices from './services/persons'
-
+import Notification from './components/Notification'
+import './index.css'
 
 function areTheseObjectsEqual(first, second) {
   "use strict";
@@ -102,26 +103,41 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
-  const [nextID,setNextID] = useState(2)
+  const [nextID,setNextID] = useState('1')
+  const [addedMessage,setAddedMessage] = useState('some notification')
 
   useEffect(()=> {
     console.log('effect')
+    fetchPerson()
+  },[])
+
+  const fetchPerson = () =>{
     personServices
       .getAll()
       .then(initialPersons =>{
         console.log('promise fulfilled')
         setPersons(initialPersons)
       })
-  },[])
+  }
 
   const addPerson = () =>{
     event.preventDefault()
     console.log('button clicked', event.target)
+
+    /*personServices
+    .getAll()
+    .then(data=>{
+      const highestID = Math.max(...data.map(item => item.id))
+      console.log(`highest id ${highestID}`)
+      setNextID(highestID + 1)
+    })*/
+
     const personObject = {
       name: newName,
       number: newNumber,
       id: nextID
     }
+
     const nameExists = persons.some(element => areTheseObjectsEqual(element.name, personObject.name))
     const numberExists = persons.some(element => areTheseObjectsEqual(element.number, personObject.number))
     if(!nameExists && !numberExists){
@@ -133,17 +149,18 @@ const App = () => {
         setNewName('')
         setNewNumber('')
         })
+      
       setNextID(nextID + 1)
       window.alert(`Entry added: ${personObject.name}, ${personObject.number}`)
+      setAddedMessage(
+        `${personObject.name} was added to server`
+      )
+      setTimeout(()=>{
+        setAddedMessage(null)
+      }, 5000)
       } else {
         window.alert(`Name or phone number already exist`)
       }
-
-    /*axios
-      .post('http://localhost:3001/persons', personObject)
-      .then(response => {
-        console.log(response)
-      })*/
   }
 
   const filteredPerson = persons.filter(persons => 
@@ -169,18 +186,23 @@ const App = () => {
 
   const handleDelete = (id) => {
     console.log('Deleting id ${id}')
-    /*if (window.confirm("Do you want to delete?")) {
-      window.open()
-    }*/
-    return(
+    if (window.confirm("Do you want to delete?")) {
       personServices
       .deleteEntry(id)
-    )
+      .catch(error =>{
+        console.error(`Error deleting entry: ${error}`)
+      })
+    } 
+    
+    else {
+      console.log(`Deletion canceled by user`)
+    }
   }
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={addedMessage}/>
       <Filter newFilter={newFilter} handleFilterChange={handleFilterChange}/>
       <h3>add a new</h3>
       <PersonForm addPerson={addPerson} newName={newName} handleNameChange={handleNameChange} newNumber={newNumber} handleNumberChange={handleNumberChange}/>
