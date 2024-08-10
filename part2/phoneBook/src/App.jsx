@@ -189,6 +189,7 @@ const App = () => {
     if (window.confirm("Do you want to delete?")) {
       personServices
       .deleteEntry(id)
+      setPersons(persons.filter(persons => persons.id !== id))
       .catch(error =>{
         console.error(`Error deleting entry: ${error}`)
       })
